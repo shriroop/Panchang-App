@@ -48,7 +48,7 @@ def scrape_panchang_for_date(date_obj):
 
     summary_df = pd.DataFrame(list(summary.items()), columns=["Category", "Details"])
 
-    return summary_df, rahukalam_df, choghadiya_df
+    return summary_df, rahukalam_df, choghadiya_df, url_df
 
 # -----------------------------
 # Streamlit Web App
@@ -73,6 +73,8 @@ if st.button("Get Panchang"):
             st.subheader("🕒 Choghadiya (Day)")
             st.dataframe(choghadiya_df, use_container_width=True)
 
+            st.subheader(url_df)
+            
             with pd.ExcelWriter("panchang_data.xlsx") as writer:
                 summary_df.to_excel(writer, sheet_name="Summary", index=False)
                 rahukalam_df.to_excel(writer, sheet_name="Inauspicious Timings", index=False)
