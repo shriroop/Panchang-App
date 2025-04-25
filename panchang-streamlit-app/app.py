@@ -37,17 +37,39 @@ def extract_named_table(soup, heading_text):
 def scrape_panchang_for_date(date_obj):
     formatted_date = date_obj.strftime("%d/%m/%Y")
     url = f"https://www.drikpanchang.com/panchang/day-panchang.html?date={formatted_date}"
-    
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Connection": "keep-alive"
+    }
+    session = requests.Session()
+    retries = Retry(total=max_retries, backoff_factor=backoff_factor,
+                    status_forcelist=[429, 500, 502, 503, 504])
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("https://", adapter)
 
-    summary = extract_panchang_summary(soup)
-    rahukalam_df = extract_named_table(soup, "Inauspicious Timings")
-    choghadiya_df = extract_named_table(soup, "Choghadiya (Day)")
+    if not is_connected():
+        return {"Error": "No internet connection. Please check your network."}
 
-    summary_df = pd.DataFrame(list(summary.items()), columns=["Category", "Details"])
+    try:
+        response = session.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        #response = requests.get(url)
+        soup = BeautifulSoup(response.content, "html.parser")
 
-    return summary_df, rahukalam_df, choghadiya_df, formatted_date
+        summary = extract_panchang_summary(soup)
+        rahukalam_df = extract_named_table(soup, "Inauspicious Timings")
+        choghadiya_df = extract_named_table(soup, "Choghadiya (Day)")
+
+        summary_df = pd.DataFrame(list(summary.items()), columns=["Category", "Details"])
+
+        return summary_df, rahukalam_df, choghadiya_df, formatted_date
+     
+    except requests.RequestException as e:
+        return {"Error": f"Failed to fetch data: {e}"}
 
 # -----------------------------
 # Streamlit Web App
