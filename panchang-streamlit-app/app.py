@@ -14,6 +14,16 @@ from urllib3.util.retry import Retry
 def clean(text):
     return ' '.join(text.strip().split())
 
+def is_connected(host="8.8.8.8", port=53, timeout=5):
+    # -----------------------------
+    # Check internet connectivity by attempting to connect to a DNS server.
+    # -----------------------------
+    try:
+        socket.create_connection((host, port), timeout=timeout)
+        return True
+    except OSError:
+        return False
+        
 def extract_panchang_summary(soup):
     summary_data = {}
     keys = soup.select("div#dpTable p strong")
@@ -38,7 +48,7 @@ def extract_named_table(soup, heading_text):
         return pd.DataFrame(rows, columns=headers)
     return pd.DataFrame()
 
-def scrape_panchang_for_date(date_obj):
+def scrape_panchang_for_date(date_obj, max_retries=3, backoff_factor=2):
     formatted_date = date_obj.strftime("%d/%m/%Y")
     url = f"https://www.drikpanchang.com/panchang/day-panchang.html?date={formatted_date}"
     headers = {
