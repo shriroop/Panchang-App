@@ -74,14 +74,28 @@ def scrape_panchang_for_date(date_obj, max_retries=3, backoff_factor=2):
         #response = requests.get(url)
         soup = BeautifulSoup(response.content, "html.parser")
 
-        summary = extract_panchang_summary(soup)
-        rahukalam_df = extract_named_table(soup, "Inauspicious Timings")
-        choghadiya_df = extract_named_table(soup, "Choghadiya (Day)")
+        #summary = extract_panchang_summary(soup)
+        #rahukalam_df = extract_named_table(soup, "Inauspicious Timings")
+        #choghadiya_df = extract_named_table(soup, "Choghadiya (Day)")
 
-        summary_df = pd.DataFrame(list(summary.items()), columns=["Category", "Details"])
+        #summary_df = pd.DataFrame(list(summary.items()), columns=["Category", "Details"])
 
-        return summary_df, rahukalam_df, choghadiya_df, formatted_date
-     
+        #return summary_df, rahukalam_df, choghadiya_df, formatted_date
+
+        data = {"Date": formatted_date}
+        # Find all muhurta entries
+        cells = soup.select(".dpTableCard.dpPanchangMuhurtaCard .dpTableCell.dpTableValue")
+        for cell in cells:
+            title_div = cell.find("div", class_="dpTitle")
+            if not title_div:
+                continue
+            label = title_div.get_text(strip=True)
+            # gather text of all dt spans inside cell
+            times = "; ".join([d.get_text(separator=' ', strip=True) 
+                                for d in cell.find_all(class_="dpPanchangMuhurtaCell")])
+            data[label] = times
+
+        return data
     except requests.RequestException as e:
         return {"Error": f"Failed to fetch data: {e}"}
 
@@ -96,7 +110,14 @@ selected_date = st.date_input("Select a Date")
 if st.button("Get Panchang"):
     with st.spinner("Fetching Panchang data..."):
         try:
-            summary_df, rahukalam_df, choghadiya_df, formatted_date = scrape_panchang_for_date(selected_date)
+            #summary_df, rahukalam_df, choghadiya_df, formatted_date = scrape_panchang_for_date(selected_date)
+            
+            result = scrape_panchang_for_date(selected_date)
+
+            # Convert result dict to DataFrame
+            df = pd.DataFrame(list(result.items()), columns=["Category", "Details"] )
+            st.subheader(f"Panchang for ")
+            st.dataframe(df, use_container_width=True)
 
             st.success(f"Panchang for {selected_date.strftime('%d %B %Y')}")
             st.subheader("🧘 Panchang Summary")
