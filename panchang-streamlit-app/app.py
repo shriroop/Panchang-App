@@ -36,7 +36,6 @@ def extract_named_table(soup, heading_text):
 
 def scrape_panchang_for_date(date_obj):
     formatted_date = date_obj.strftime("%d/%m/%Y")
-    print(formatted_date)
     url = f"https://www.drikpanchang.com/panchang/day-panchang.html?date={formatted_date}"
     
     response = requests.get(url)
@@ -48,7 +47,7 @@ def scrape_panchang_for_date(date_obj):
 
     summary_df = pd.DataFrame(list(summary.items()), columns=["Category", "Details"])
 
-    return summary_df, rahukalam_df, choghadiya_df, url
+    return summary_df, rahukalam_df, choghadiya_df, formatted_date
 
 # -----------------------------
 # Streamlit Web App
@@ -73,7 +72,7 @@ if st.button("Get Panchang"):
             st.subheader("🕒 Choghadiya (Day)")
             st.dataframe(choghadiya_df, use_container_width=True)
 
-            st.subheader(url)
+            st.subheader(formatted_date)
             
             with pd.ExcelWriter("panchang_data.xlsx") as writer:
                 summary_df.to_excel(writer, sheet_name="Summary", index=False)
