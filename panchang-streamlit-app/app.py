@@ -60,7 +60,7 @@ selected_date = st.date_input("Select a Date")
 if st.button("Get Panchang"):
     with st.spinner("Fetching Panchang data..."):
         try:
-            summary_df, rahukalam_df, choghadiya_df = scrape_panchang_for_date(selected_date)
+            summary_df, rahukalam_df, choghadiya_df, formatted_date = scrape_panchang_for_date(selected_date)
 
             st.success(f"Panchang for {selected_date.strftime('%d %B %Y')}")
             st.subheader("🧘 Panchang Summary")
