@@ -36,6 +36,7 @@ def extract_named_table(soup, heading_text):
 
 def scrape_panchang_for_date(date_obj):
     formatted_date = date_obj.strftime("%d/%m/%Y")
+    print(formatted_date)
     url = f"https://www.drikpanchang.com/panchang/day-panchang.html?date={formatted_date}"
     
     response = requests.get(url)
